@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/CircleCI-Public/circleci-cli/api"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -26,6 +28,7 @@ func diagnostic(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 
 	Logger.Infoln("\n---\nCircleCI CLI Diagnostics\n---\n")
+	Logger.Infof("Verbose mode: %v\n", viper.GetBool("verbose"))
 	Logger.Infof("Config found: %v\n", viper.ConfigFileUsed())
 
 	Logger.Infof("GraphQL API address: %s\n", address)
@@ -34,7 +37,10 @@ func diagnostic(cmd *cobra.Command, args []string) error {
 		return errors.New("please set a token")
 	}
 	Logger.Infoln("OK, got a token.")
-	Logger.Infof("Verbose mode: %v\n", viper.GetBool("verbose"))
+
+	who, err := api.WhoamiQuery(context.Background(), Logger)
+	Logger.Infof("Got a response: %+v\n", who)
+	//Logger.Infoln("Hello, %s.", who.Me.Name)
 
 	return nil
 }

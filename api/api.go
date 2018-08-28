@@ -56,6 +56,15 @@ type CreateNamespaceResponse struct {
 	GQLResponseErrors
 }
 
+// WhoamiResponse type matches the data shape of the GQL response for the current user
+type WhoamiResponse struct {
+	Me struct {
+		Name string
+	}
+
+	GQLResponseErrors
+}
+
 // CreateOrbResponse type matches the data shape of the GQL response for
 // creating an orb
 type CreateOrbResponse struct {
@@ -126,6 +135,27 @@ func loadYaml(path string) (string, error) {
 	}
 
 	return string(config), nil
+}
+
+func WhoamiQuery(ctx context.Context, logger *logger.Logger) (*WhoamiResponse, error) {
+	response := WhoamiResponse{}
+	query := `query { me { name } }`
+
+	request := client.NewAuthorizedRequest(viper.GetString("token"), query)
+
+	address, err := GraphQLServerAddress(EnvEndpointHost())
+	if err != nil {
+		return nil, err
+	}
+	graphQLclient := client.NewClient(address, logger)
+
+	err = graphQLclient.Run(ctx, request, &response)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
 func buildAndOrbQuery(ctx context.Context, logger *logger.Logger, configPath string, response interface{}, query string) error {
